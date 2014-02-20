@@ -8,10 +8,10 @@ class Synode {
 
   public function __construct($bridgeHost, $secret) {
     $this->secret = $secret;
-    $this->socketIO = new ElephantIOClient("http://".$bridgeHost, 'socket.io', 1, false, true, true);
+    $this->socketIO = new ElephantIOClient("http://".$bridgeHost, 'socket.io', 1, false, true, false);
   }
 
-  public function allow($userHash, $room) {
+  public function allow($room, $userHash) {
     $msg = new synodeMessage();
     $msg->auth = $this->secret;
     $msg->room = $room;
@@ -20,7 +20,7 @@ class Synode {
     $this->send('allow',$msg);
   }
 
-  public function push($message, $room) {
+  public function push($room, $message) {
     $msg = new synodeMessage();
     $msg->auth = $this->secret;
     $msg->room = $room;
@@ -31,7 +31,6 @@ class Synode {
   private function send($code, synodeMessage $msg) {
     $this->socketIO->init();
     $this->socketIO->emit($code, $msg);
-    //$this->socketIO->emit(ElephantIOClient::TYPE_EVENT, null, null, json_encode(array("name"=>$code, "args"=>$msg)));
     $this->socketIO->close();
   }
 }
