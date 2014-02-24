@@ -1,18 +1,31 @@
 <?php
-// This is how to initiate a connexion to the realtime bridge :
+/**
+ * SYNODE DEMO - API Server Side
+ */
+require_once("config.inc.php");    // Synode Bridge configuration
+require_once(__DIR__."/vendors/Synode/synode.class.php");  // Synode Server API
 
-// Generate a token :
-$hash = uniqid();
+// Template values
+$userHash = uniqid();
+$assignAry['{$SYN_HOST}'] = SYN_HOST;
+$assignAry['{$USR_HASH}'] = $userHash;
 
-require_once("synode.class.php");
+// This code tell the Synode Bridge that he can accept the user with this hash.
+// When the bridge receive this hash connexion, it will place the user in 
+// the specified communication room ('home' in this demo).
 try {
-  $s = new Synode("localhost:1337", "motDePasse");
-  $s->allow("home",$hash);
+  $s = new Synode(SYN_HOST, SYN_SECRET);
+  $s->allow("anonymous","index_room",$userHash);
   unset($s);
 }
 catch(Exception $e) {
-	die("Socket Connexion error, try to refresh:<br /><b>".$e->getMessage()."</b>");
+	die("SynodeError: Synode Bridge seems to be offline.");
 }
 
-$html = str_replace("{USER_HASH}", $hash, file_get_contents(__DIR__."/assets/demo.tpl"));
+// Here is the world's smallest template engine ! 
+// - Absolutly not optimized ! Just for this demo ! -
+$html = file_get_contents(__DIR__."/assets/index.tpl");
+foreach($assignAry as $key=>$value) { $html = str_replace($key, $value, $html); }
+
+// Job done.
 echo $html;
