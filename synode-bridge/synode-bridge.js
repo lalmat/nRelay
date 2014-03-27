@@ -1,19 +1,26 @@
 /**
  * SYNODE BRIDGE - Run on nodeJS
  */
+
 // ----------------------------------------------------------------------------
 // Configuration
 
-var port      = 1337;
-var userAry   = [];
-var roomCount = [];
-var debug     = true;
-var authoritySecret = "mauvaisMotDePasse";
+var authoritySecret = "mauvaisMotDePasse";    // API password
+
+var debug     = true;  // Enable / disable debug mode
+var port      = 1337;  // Listening port
+var userAry   = new Array();    // Array of users tokens allowed for connexion
+var roomCount = new Array();    // Array of rooms with number of user connected to.
+var gcTimeout = 5;     // Garbage Collector Interval (in sec.)
+var cxTimeout = 30;    // Max duration allowed to connect (in sec.)
+
 
 //-----------------------------------------------------------------------------
 // Serveur Synode
 
-var io = require("socket.io").listen(port, { log: false });
+var jsSHA = require("jssha");
+var io    = require("socket.io").listen(port, { log: false });
+
 if (debug) console.log("[SYNODE] Brige listening on port "+port);
 
 io.sockets.on('connection', function (socket) {
@@ -28,34 +35,24 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('allow', function(order) {
     if (debug) console.log("[SYNODE] Incomming allow...");
-    if(isAutority(order.auth)) {
-      userAry[order.userHash] = {uid:order.userId, allowed:order.access, room:order.room, expire:(getTimestamp()+30)};
-      console.log("[SYNODE] "+order.userHash+" allowed to join "+userAry[order.userHash].room+" until "+userAry[order.userHash].expire);
+    if(isAutority(order.tokenSalt, order.tokenTest)) {
+      userAry[order.userHash] = { uid:order.userId, allowed:order.access, room:order.room, expire:(getTimestamp()+30) };
+      if (debug) console.log("[SYNODE] "+order.userHash+" allowed to join "+userAry[order.userHash].room+" until "+userAry[order.userHash].expire);
     } else {
-      console.log("[SYNODE] Rejecting authority : "+order.auth);
+      if (debug) console.log("[SYNODE] Rejecting authority : "+order.tokenTest+" failed.");
     }
   });
-
-  //TODO: Enable Bridge Statistics
-  /*
-  socket.on('stat', function(order) {
-    if (debug) console.log("Asking for stats");
-    if(isAutority(order.auth)) {
-      socket.emit('stat', {rooms:roomCount,pending:userAry});
-    }
-  });
-  */
 
   socket.on('subscribe', function(data) {
     if (debug) console.log("[SYNODE] Incomming subscription");
     if (userAry[data.userHash] != null && userAry[data.userHash].allowed) {
-      socket.room   = userAry[data.userHash].room;
       socket.uid    = userAry[data.userHash].uid;
+      socket.room   = userAry[data.userHash].room;
       socket.isUser = true;
       socket.join(socket.room);
-      roomCount[socket.room]++;
-      userAry[data.userHash].allowed = false; // Prevent 2 connexions at the same time ! Maybe I will change that method in future...
-      console.log("[SYNODE] User "+socket.uid+" accepted in "+socket.room);
+      roomCount[socket.room] = (roomCount[socket.room] > 0) ? roomCount[userAry[data.userHash].room]++ : 1;
+      userAry[data.userHash].allowed = false; // Prevent multiple connexions.
+      if (debug) console.log("[SYNODE] User "+socket.uid+" allowed in "+socket.room+" ("+roomCount[socket.room]+" users).");
       socket.emit("subscribe", {result:true});
     }
     else {
@@ -66,38 +63,42 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('push', function(order){
-    if (debug) console.log("[SYNODE] Incomming Server Push :");
-    if(isAutority(order.auth)) {
-      if (debug) console.log(order.data);
-      socket.broadcast.to(order.room).emit("push",order.data);
+    if (debug) console.log("[SYNODE] Incomming Server Push ("+order.userId+" => "+order.room+"):");
+    if(isAutority(order.tokenSalt, order.tokenTest)) {
+      //if (debug) console.log(order.data);
+      io.sockets.in(order.room).emit("push", {uid:order.userId, action:order.action, data:order.data});
     } else {
-      if (debug) console.log("-> Push not allowed : bad secret");
+      if (debug) console.log("[SYNODE] Server Push not allowed : bad password");
     }
   });
 
   socket.on('sync', function(syncData){
-    if (debug) console.log("[SYNODE] Incomming Client Sync :")
+    if (debug) console.log("[SYNODE] Incomming Client Sync ("+socket.uid+" => "+socket.room+"):")
     if (socket.isUser) {
-      if (debug) console.log(syncData);
-      socket.in(socket.room).emit("sync", {uid:socket.uid, data:syncData});
+      //if (debug) console.log(syncData);
+      io.sockets.in(socket.room).emit("sync", {uid:socket.uid, action:syncData.action, data:syncData.data});
     } else {
-      if (debug) console.log("-> Sync not allowed : not a user");
+      if (debug) console.log("[SYNODE] Sync not allowed : not a user");
     }
   });
 
   if (debug) console.log("[SYNODE] New connexion !");
 });
 
-setInterval(garbageCollect, 5000);
+setInterval(garbageCollect, gcTimeout*1000);
 
 //-----------------------------------------------------------------------------
 /**
  * Check the socket authority to push (Broadcast) messages.
- * @param  {string}  auth [description]
+ * @param  {string}  token1   Token de Salt
+ * @param  {string}  token2   Token de Test
  * @return {Boolean}      [description]
  */
-function isAutority(auth) {
-  return (authoritySecret == auth); // TODO: Make a better security !
+function isAutority(token1, token2) {
+  var crypticSecret = token1+authoritySecret;
+  var crypticToken  = new jsSHA(crypticSecret, "TEXT");
+  var crypticSHA256 = crypticToken.getHash("SHA-256", "HEX");
+  return (crypticSHA256 == token2); 
 }
 
 //-----------------------------------------------------------------------------
@@ -114,7 +115,7 @@ function garbageCollect() {
       tmpUserAry[userHash] = userAry[userHash];
     } else {
       if (debug) console.log("[SYNODE] Removing hash:"+userHash);
-    }
+    } 
   }
   userAry = tmpUserAry;
 

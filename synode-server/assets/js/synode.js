@@ -38,7 +38,7 @@ function synode(host, hash) {
     // Client Sync : Message from Synode User in the same room
     this.socket.on('sync', function (msg) {
       if (that.debug) { console.log("Synode: Client Sync Received :"); console.log(msg); }
-      onSync(msg.uid, msg.data);
+      onSync(msg);
     });
 
     // Result of Handshaking
@@ -62,9 +62,9 @@ function synode(host, hash) {
    * Broadcast data to all Synode sockets in the same room as this socket
    * @param  {[object]} data
    */
-  this.sync = function (data) {
+  this.sync = function (myAction, myData) {
     var that = this;
-    if (this.connected) { this.socket.emit("sync", data); }
+    if (this.connected) { this.socket.emit("sync", {action:myAction, data:myData}); }
     else { console.log("SynodeError: Not connected."); }
     return that;
   };
