@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Synode Client</title>
+		<title>nRelay Client Demo</title>
 		<script type="text/javascript" src="assets/js/socket.io.min.js"></script>
 		<script type="text/javascript" src="assets/js/jquery.min.js"></script>
 		<script type="text/javascript" src="assets/js/nRelay.js"></script>
@@ -23,32 +23,32 @@
 			// This is what to do when ServerPush is received:
 		  function myPush(msg) {
 		  	console.log("MyPush:"+msg);
-		  	domId("log").innerHTML = "<b>SERVER PUSH ("+msg.uid+") :</b>"+msg.action+":"+msg.data+"<br />"+domId("log").innerHTML;
+		  	domId("log").innerHTML = "<b>SERVER PUSH ("+msg.uid+") :</b> Action:"+msg.action+", Data:"+msg.data+"<br />"+domId("log").innerHTML;
 		  }
 
 		  // This is what to do when ClientSync is received:
 		  function mySync(msg) {
-		  	domId("log").innerHTML = "<b>CLIENT SYNC ("+msg.uid+") :</b>"+msg.action+":"+msg.data+"<br />"+domId("log").innerHTML;
+		  	domId("log").innerHTML = "<b>CLIENT SYNC ("+msg.uid+") :</b> Action:"+msg.action+", Data:"+msg.data+"<br />"+domId("log").innerHTML;
 		  }
 		
 		  // Client Sync function
 		 	function doSync() {
-		 		synDemo.sync("say", domId('clientText').value);
+		 		nRelayDemo.sync("userSync", domId('clientText').value);
 		 		domId('clientText').value = "";
 		 		domId('clientText').focus();
 		 	}
 
 		  // This line ignite the realtime communication.
-		 	var nRelayDemo = new nRelay("{$NRLY_HOST}","{$USER_HASH}").start(myPush, mySync);
+		 	var nRelayDemo = new nRelay("{$NLRY_HOST}","{$USER_HASH}").start(myPush, mySync);
 		 	
 		</script>
 	</head>
 	<body>
-		<h1>Simple SynodeJS demo</h1>
+		<h1>nRelay demo</h1>
 		<input type="text" id="clientText" /> 
 		<button type="button" onclick="doPush()">Push</button>
 		<button type="button" onclick="doSync()">Sync</button>
 		<hr />
-		<div id="log"></div>
+		<div id="log" style="font-family:monospace; font-size:1.2em;"></div>
 	</body>
 </html>

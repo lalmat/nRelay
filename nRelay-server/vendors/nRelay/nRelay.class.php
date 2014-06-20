@@ -62,7 +62,7 @@ class nRelay {
    * @param  synodeMessage $msg  [description]
    * @return [type]              [description]
    */
-  private function send($code, nRelayMsg $msg) {
+  private function send($code, nRelayData $msg) {
     $this->socketIO->init();
     $this->socketIO->emit($code, $msg);
     $this->socketIO->close();
@@ -82,8 +82,8 @@ class nRelayData {
   public function __construct($userId, $room, $secret) {
   	$this->userId = $userId;
   	$this->room   = $room;
-  	$s->tokenSalt = md5(uniqid());
-  	$s->tokenTest = hash("sha256", $this->tokenSalt.$secret);
+  	$this->tokenSalt = md5(uniqid());
+  	$this->tokenTest = hash("sha256", $this->tokenSalt.$secret);
   }
 }
 

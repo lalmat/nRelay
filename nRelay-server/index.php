@@ -20,7 +20,7 @@ catch(Exception $e) {
 }
 
 // Template values
-$assignAry['{$NLRY_HOST}'] = NLRY_HOST;
+$assignAry['{$NLRY_HOST}'] = NRLY_HOST;
 $assignAry['{$USER_HASH}'] = $userHash;
 
 // Here is maybe the world's smallest template engine !
