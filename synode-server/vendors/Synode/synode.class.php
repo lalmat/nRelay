@@ -23,8 +23,8 @@ class Synode {
    * Destructor
    */
   public function __destruct() {
-    $this->secret = null;
-    unset($this->socketIO);
+  	unset($this->socketIO);
+  	$this->secret = null;
   }
 
   /**
@@ -34,14 +34,11 @@ class Synode {
    * @return [string]         [User Hash that should be used to connect to the SynodeBridge]
    */
   public function allow($userId, $room) {
-    $auth = new synodeAuth();
-    $this->fillSkel($userId, $room, $auth);
-
+    $auth = new synodeAuth($userId, $room, $this->secret);
     $auth->access   = true;
     $auth->userHash = uniqid();
-    
-    $this->send('allow',$auth);
-    return $auth->userHash;
+    if ($this->send('allow', $auth)) return $auth->userHash;
+    return null;
   }
 
   /**
@@ -53,14 +50,10 @@ class Synode {
    * @return [boolean]        []
    */
   public function push($userId, $room, $action, $data) {
-    $msg = new synodePush();
-    $this->fillSkel($userId, $room, $msg);
-
+    $msg = new synodePush($userId, $room, $this->secret);
     $msg->action = $action;
     $msg->data   = $data;
-    
-    $this->send("push",$msg);
-    return true;
+    return $this->send("push", $msg);
   }
 
   /**
@@ -69,41 +62,35 @@ class Synode {
    * @param  synodeMessage $msg  [description]
    * @return [type]              [description]
    */
-  private function send($code, synodeSkel $msg) {
+  private function send($code, synodeMsg $msg) {
     $this->socketIO->init();
     $this->socketIO->emit($code, $msg);
     $this->socketIO->close();
+    return true; // TODO: Do better next time !
   }
-
-  /**
-   * Skeleton message filler
-   * @param  [int]      $userId [ID of the User]
-   * @param  [string]   $room   [Room]
-   * @param  synodeSkel $s      []
-   */
-  private function fillSkel($userId, $room, synodeSkel $s) {
-    $s->userId = $userId;
-    $s->room   = $room;
-    $s->tokenSalt = md5(uniqid());
-    $s->tokenTest = hash("sha256", $s->tokenSalt.$this->secret);
-  }
-
 }
 
 /**
  * Generic message class
  */
-class synodeSkel {
+class synodeMsg {
   public $userId;
   public $tokenSalt;
   public $tokenTest;
   public $room;
+
+  public function __construct($userId, $room, $secret) {
+  	$this->userId = $userId;
+  	$this->room   = $room;
+  	$s->tokenSalt = md5(uniqid());
+  	$s->tokenTest = hash("sha256", $this->tokenSalt.$secret);
+  }
 }
 
 /**
  * Authentication message
  */
-class synodeAuth extends synodeSkel {
+class synodeAuth extends synodeMsg {
   public $access;
   public $userHash;
 }
@@ -111,7 +98,7 @@ class synodeAuth extends synodeSkel {
 /**
  * Communication message
  */
-class synodePush extends synodeAuth {
+class synodePush extends synodeMsg {
   public $action;
   public $data;
 }
