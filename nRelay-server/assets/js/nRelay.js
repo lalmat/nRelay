@@ -21,7 +21,7 @@ function nRelay(host, hash) {
     var that = this;
 
     if (this.debug) { console.log("nRelay: Connecting '" + this.bridgeHost + "'"); }
-    this.socket = io.connect(this.bridgeHost);
+    this.socket = io.connect(this.bridgeHost, {'force new connection': true});
 
     // Handshake method
     this.socket.on('connect', function () {
