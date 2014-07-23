@@ -13,13 +13,33 @@ var userAry   = new Array();    // Array of users tokens allowed for connexion
 var roomCount = new Array();    // Array of rooms with number of user connected to.
 var gcTimeout = 5;              // Garbage Collector Interval (in sec.)
 var cxTimeout = 30;             // Max duration allowed to connect (in sec.)
-
+var useHTTPS  = true;           // Utilisation de HTTPS
 
 //-----------------------------------------------------------------------------
 // Serveur nRelay
+if (useHTTPS) {
+  if (debug) console.log("[nRelay] SSL Mode ON");
+  var https = require("https");
+  var fs    = require("fs");
 
-var jsSHA = require("jssha");
-var io    = require("socket.io").listen(port, { log: false });
+  var options = {
+    key:    fs.readFileSync('ssl/node.key'),
+    cert:   fs.readFileSync('ssl/node.crt'),
+    ca:     fs.readFileSync('ssl/node-ca.crt')
+  }
+
+  var app = https.createServer(options);
+  var jsSHA = require("jssha");
+  var io    = require("socket.io").listen(app, { log: false });
+  app.listen(port);
+  
+} 
+
+else {
+  if (debug) console.log("[nRelay] SSL Mode OFF");
+  var jsSHA = require("jssha");
+  var io    = require("socket.io").listen(port, { log: false });
+}
 
 if (debug) console.log("[nRelay] Brige listening on port "+port);
 
@@ -98,7 +118,7 @@ function isAutority(token1, token2) {
   var crypticSecret = token1+authoritySecret;
   var crypticToken  = new jsSHA(crypticSecret, "TEXT");
   var crypticSHA256 = crypticToken.getHash("SHA-256", "HEX");
-  return (crypticSHA256 == token2); 
+  return (crypticSHA256 == token2);
 }
 
 //-----------------------------------------------------------------------------
@@ -115,7 +135,7 @@ function garbageCollect() {
       tmpUserAry[userHash] = userAry[userHash];
     } else {
       if (debug) console.log("[nRelay] Removing hash:"+userHash);
-    } 
+    }
   }
   userAry = tmpUserAry;
 

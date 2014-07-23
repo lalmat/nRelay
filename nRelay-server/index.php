@@ -16,6 +16,7 @@ try {
   unset($s);
 }
 catch(Exception $e) {
+	"<pre>".print_r($e)."</pre>";
 	die("nRelay Error: nRelay Bridge seems to be offline.");
 }
 

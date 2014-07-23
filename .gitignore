@@ -1,5 +1,10 @@
 # Created by http://www.gitignore.io
 
+# Disable SSL Key Versionning
+*.key
+*.crt
+*.csr
+
 ### SublimeText ###
 # workspace files are user-specific
 *.sublime-workspace

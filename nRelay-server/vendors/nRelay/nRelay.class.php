@@ -16,7 +16,7 @@ class nRelay {
    */
   public function __construct($bridgeHost, $secret) {
     $this->secret = $secret;
-    $this->socketIO = new ElephantIOClient($bridgeHost, 'socket.io', 1, false, true, false);
+    $this->socketIO = new ElephantIOClient($bridgeHost, 'socket.io', 1, false, false, false);
   }
 
   /**
