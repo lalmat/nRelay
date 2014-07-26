@@ -3,8 +3,19 @@ nRelay
 
 Want to be Realtime in Existing Web Frameworks ? No Problem, nRelay is here !
 
-Don't you ever dream of being able to use realtime data update with Symfony, Zend or Rails ? nRelay is a start of solution.
+Don't you ever dream of being able to use realtime data update with PHP Framworks ? nRelay is a start of solution.
 
+
+Notes :
+=======
+
+After some researches, it seems that this project look like a free and open source Heroku Pusher (https://devcenter.heroku.com/articles/pusher).
+
+New :
+=====
+
+- Support SSL Encryption and I use it in production environnement with a fallback to traditionnal mode.
+- Socket.IO 1.0.x (Optimized Elephant.IO - Pulling Request in progress)
 
 Get Started
 ===========
@@ -27,6 +38,8 @@ Now you can build realtime webapps with ease !
 ;)
 You're welcome.
 
+In this app
+===========
 
 Bridge : Written in Javascript, with NodeJS and Socket.IO
 ServerSample : Written in PHP using Elephant.IO, 
