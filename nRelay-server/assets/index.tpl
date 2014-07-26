@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>nRelay Client Demo</title>
-		<script type="text/javascript" src="assets/js/socket.io.min.js"></script>
+		<script type="text/javascript" src="assets/js/socket.io.js"></script>
 		<script type="text/javascript" src="assets/js/jquery.min.js"></script>
 		<script type="text/javascript" src="assets/js/nRelay.js"></script>
 		<script type="text/javascript">

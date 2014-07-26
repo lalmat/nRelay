@@ -1,4 +1,4 @@
-/**
+  /**
  * nRelay BRIDGE - Run on nodeJS
  */
 
@@ -13,38 +13,46 @@ var userAry   = new Array();    // Array of users tokens allowed for connexion
 var roomCount = new Array();    // Array of rooms with number of user connected to.
 var gcTimeout = 5;              // Garbage Collector Interval (in sec.)
 var cxTimeout = 30;             // Max duration allowed to connect (in sec.)
-var useHTTPS  = true;           // Utilisation de HTTPS
+
+var HTTPS = new Array(); 
+HTTPS['enabled'] = false;       // Activation du HTTPS
+HTTPS['prvKey'] = null;         // Clé privée
+HTTPS['pubKey'] = null;         // Clé publique
+HTTPS['optCA']  = null;         // Clé publique Autorité de Certification
 
 //-----------------------------------------------------------------------------
 // Serveur nRelay
-if (useHTTPS) {
+var jsSHA  = require("jssha"); 
+var app = null;
+var io = null;
+
+if (HTTPS['enabled']) {
   if (debug) console.log("[nRelay] SSL Mode ON");
-  var https = require("https");
   var fs    = require("fs");
 
   var options = {
-    key:    fs.readFileSync('ssl/node.key'),
-    cert:   fs.readFileSync('ssl/node.crt'),
-    ca:     fs.readFileSync('ssl/node-ca.crt')
+    key:    fs.readFileSync(HTTPS['prvKey']),
+    cert:   fs.readFileSync(HTTPS['pubKey']),
+    ca:     fs.readFileSync(HTTPS['optCA'])
   }
 
-  var app = https.createServer(options);
-  var jsSHA = require("jssha");
-  var io    = require("socket.io").listen(app, { log: false });
+  app = require("https").createServer(options);
+  io  = require("socket.io")(app);
   app.listen(port);
-  
 } 
 
 else {
   if (debug) console.log("[nRelay] SSL Mode OFF");
-  var jsSHA = require("jssha");
-  var io    = require("socket.io").listen(port, { log: false });
+  app = require('http').createServer()
+  io  = require('socket.io')(app);
+  app.listen(port);
 }
 
 if (debug) console.log("[nRelay] Brige listening on port "+port);
-
-io.sockets.on('connection', function (socket) {
-
+io.on('connection', function (socket) {
+  socket.onevent(function(args) {
+    console.log(args);
+  });
   socket.on('disconnect', function() {
     if (debug) console.log("[nRelay] Socket disconnected");
     if (socket.isUser) {

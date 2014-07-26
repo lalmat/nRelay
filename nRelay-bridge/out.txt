@@ -1,0 +1,12 @@
+[nRelay] SSL Mode OFF
+[nRelay] Brige listening on port 1337
+[nRelay] New connexion !
+[nRelay] Incomming subscription
+[nRelay] Incomming user denied.
+[nRelay] Socket disconnected
+[nRelay] New connexion !
+[nRelay] Incomming subscription
+[nRelay] Incomming user denied.
+[nRelay] Socket disconnected
+[nRelay] New connexion !
+[nRelay] Socket disconnected
