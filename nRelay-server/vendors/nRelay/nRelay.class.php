@@ -1,6 +1,5 @@
 <?php
-require_once( __DIR__ . '/../ElephantIO/Client.php');
-use ElephantIO\Client as ElephantIOClient;
+require_once( __DIR__ . '/../Elephant.IO/Socket.class.php');
 
 /**
  * RTS SERVER CLASS - PHP -
@@ -15,8 +14,8 @@ class nRelay {
    * @param [string] $secret     [API Password]
    */
   public function __construct($bridgeHost, $secret) {
-    $this->secret = $secret;
-    $this->socketIO = new ElephantIOClient($bridgeHost, 'socket.io', 1, false, false, false);
+    $this->secret   = $secret;
+    $this->socketIO = new ElephantIO\Socket($bridgeHost, false, ElephantIO\Socket::DEBUG_HTML);
   }
 
   /**
@@ -63,10 +62,14 @@ class nRelay {
    * @return [type]              [description]
    */
   private function send($code, nRelayData $msg) {
-    $this->socketIO->init();
-    $this->socketIO->emit($code, $msg);
-    $this->socketIO->close();
-    return true; // TODO: Do better next time !
+  	try {
+  		$this->socketIO->open()->emit($code, $msg)->close();
+  		return true;
+  	}
+  	catch(\Exception $e) {
+  		echo "<!-- ::NRELAY-SEND:EXCEPTION:: ".$e->getMessage()." -->";
+  	}
+  	return false;
   }
 }
 
