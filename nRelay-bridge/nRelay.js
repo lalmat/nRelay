@@ -15,7 +15,7 @@ var gcTimeout = 5;              // Garbage Collector Interval (in sec.)
 var cxTimeout = 30;             // Max duration allowed to connect (in sec.)
 
 var HTTPS = new Array(); 
-HTTPS['enabled'] = true;             // Activation du HTTPS
+HTTPS['enabled'] = false;             // Activation du HTTPS
 HTTPS['prvKey'] = "ssl/node.key";    // Clé privée
 HTTPS['pubKey'] = "ssl/node.crt";    // Clé publique
 HTTPS['optCA']  = false; //"ssl/node-ca.crt"; // Clé publique Autorité de Certification
