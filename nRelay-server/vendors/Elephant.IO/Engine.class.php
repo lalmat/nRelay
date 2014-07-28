@@ -60,8 +60,8 @@ class Engine {
 		$this->_serverProtocol      = $parsedURL['scheme'];
 		$this->_serverHost          = $parsedURL['host'];
 		$this->_serverPath          = isset($parsedURL['path']) ? $parsedURL['path'] : "";
-		$this->_serverSecured       = (array_key_exists('scheme', $parsedURL) && $parsedURL['scheme'] == 'https');
-		$this->_serverPort          = isset($parsedURL['port']) ? $parsedURL['port'] : ($this->_serverSecured?443:null);
+		$this->_serverSecured       = isset($parsedURL['scheme']) ? ($parsedURL['scheme'] == "https") : false;
+		$this->_serverPort          = isset($parsedURL['port']) ? $parsedURL['port'] : ($this->_serverSecured?443:80);
 		$this->_serverSSLSelfSigned = $ssl_selfSignedCertificate;
 
 		$this->_name      = $engineName;
@@ -90,14 +90,15 @@ class Engine {
 		$this->debug("Engine: Starting...");
 		$this->_isOnline = false;
 		if ($this->handshake()) {
-			$this->debug("Engine: Opening new socket.");
-			$this->sckHandler = fsockopen($this->_serverHost, $this->_serverPort, $errno, $errstr);
+			$host = (($this->_serverSecured) ? "ssl://" : "").$this->_serverHost;
+			$this->debug("Engine: Opening new socket on ".$host.":".$this->_serverPort);
+			$this->sckHandler = fsockopen($host, $this->_serverPort, $errno, $errstr);
 			if (!$this->sckHandler) {
 				throw new EngineException("fSocket Error #".$errno." : ".$errstr);
 			} else {
 				$this->_messageHandler = $messageHandler;
-				$this->_isOnline = true;
 				$this->eio_upgrade('websocket');
+				$this->_isOnline = true;
 			}
 		}
 	}
@@ -367,18 +368,19 @@ class Engine {
 		$this->debug("Engine: Upgrading to transport '".$transport."'");
 		$this->_transport = $transport;
 
-		$url = $this->_serverPath."/".$this->_name . "/"."?EIO=".$this->_version."&transport=".$this->_transport."&sid=".$this->sckSession->sid;
+		$url  = "/".$this->_name."/"."?EIO=".$this->_version."&transport=".$this->_transport."&sid=".rawurlencode($this->sckSession->sid);
+
+		$key = $this->generateKey();
 		$getRequest  = "GET ".$url." HTTP/1.1\r\n";
 		$getRequest .= "Host: ".$this->_serverHost."\r\n";
-		$getRequest .= "Upgrade: WebSocket\r\n";
-		$getRequest .= "Connection: Upgrade\r\n";
-		$getRequest .= "Sec-WebSocket-Key: ".$this->generateKey()."\r\n";
-		$getRequest .= "Sec-WebSocket-Version: 13\r\n";;
-		$getRequest .= "Origin: *\r\n\r\n";;
-		$this->debug("Request : ".PHP_EOL.$getRequest);
-
+		if ($transport == self::T_WEBSOCKET) {
+			$getRequest .= "Upgrade: WebSocket\r\n";
+			$getRequest .= "Connection: Upgrade\r\n";
+			$getRequest .= "Sec-WebSocket-Key: $key\r\n";
+			$getRequest .= "Sec-WebSocket-Version: 13\r\n";
+		}
+		$getRequest .= "Origin: *\r\n\r\n";
 		fwrite($this->sckHandler, $getRequest);
-
 		$res = fgets($this->sckHandler);
 
 		if ($res === false)
@@ -390,8 +392,8 @@ class Engine {
 		// Flushing garbage
 		while(trim(fgets($this->sckHandler)) !== "");
 
-		// Telling the server that we have upgraded the transport protocol.
-		$this->write(self::E_UPGRADE);
+		// Tells the server that we have upgraded the transport protocol.
+		$this->write(self::E_UPGRADE, null, false);
 	}
 
 

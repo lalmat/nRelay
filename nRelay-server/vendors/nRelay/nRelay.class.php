@@ -15,7 +15,7 @@ class nRelay {
    */
   public function __construct($bridgeHost, $secret) {
     $this->secret   = $secret;
-    $this->socketIO = new ElephantIO\Socket($bridgeHost, false, ElephantIO\Socket::DEBUG_HTML);
+    $this->socketIO = new ElephantIO\Socket($bridgeHost, true, ElephantIO\Socket::DEBUG_HTML);
   }
 
   /**

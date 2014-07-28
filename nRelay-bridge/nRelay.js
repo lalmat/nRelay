@@ -15,10 +15,10 @@ var gcTimeout = 5;              // Garbage Collector Interval (in sec.)
 var cxTimeout = 30;             // Max duration allowed to connect (in sec.)
 
 var HTTPS = new Array(); 
-HTTPS['enabled'] = false;       // Activation du HTTPS
-HTTPS['prvKey'] = null;         // Clé privée
-HTTPS['pubKey'] = null;         // Clé publique
-HTTPS['optCA']  = null;         // Clé publique Autorité de Certification
+HTTPS['enabled'] = true;             // Activation du HTTPS
+HTTPS['prvKey'] = "ssl/node.key";    // Clé privée
+HTTPS['pubKey'] = "ssl/node.crt";    // Clé publique
+HTTPS['optCA']  = false; //"ssl/node-ca.crt"; // Clé publique Autorité de Certification
 
 //-----------------------------------------------------------------------------
 // Serveur nRelay
@@ -30,29 +30,28 @@ if (HTTPS['enabled']) {
   if (debug) console.log("[nRelay] SSL Mode ON");
   var fs    = require("fs");
 
-  var options = {
-    key:    fs.readFileSync(HTTPS['prvKey']),
-    cert:   fs.readFileSync(HTTPS['pubKey']),
-    ca:     fs.readFileSync(HTTPS['optCA'])
+  var ssl = {
+    "ca":   false,
+    "key":  false,
+    "cert": false,
   }
+  if (HTTPS['optCA'] != false) ssl.ca = HTTPS['optCA'];
+  ssl.key  = fs.readFileSync(HTTPS['prvKey']),
+  ssl.cert = fs.readFileSync(HTTPS['pubKey']),
 
-  app = require("https").createServer(options);
+  app = require("https").createServer(ssl);
   io  = require("socket.io")(app);
   app.listen(port);
 } 
 
 else {
   if (debug) console.log("[nRelay] SSL Mode OFF");
-  app = require('http').createServer()
-  io  = require('socket.io')(app);
-  app.listen(port);
+  io  = require('socket.io').listen(port);
 }
 
 if (debug) console.log("[nRelay] Brige listening on port "+port);
 io.on('connection', function (socket) {
-  socket.onevent(function(args) {
-    console.log(args);
-  });
+
   socket.on('disconnect', function() {
     if (debug) console.log("[nRelay] Socket disconnected");
     if (socket.isUser) {
