@@ -194,7 +194,7 @@ class Engine {
 		// $this->sckSession->sid, $this->sckSession->pingInterval, $this->sckSession->pingTimeout, $sess->upgrades;
 
 		// Check if the server support WebSockets
-		if (!in_array('websocket',$this->sckSession->upgrades))
+		if (is_array($this->sckSession->upgrades) && !in_array('websocket',$this->sckSession->upgrades))
 			throw new \Exception('This socket.io server do not support websocket protocol. Terminating connection...');
 
 		return true;
