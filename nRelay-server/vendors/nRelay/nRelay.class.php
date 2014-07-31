@@ -16,12 +16,14 @@ class nRelay {
   public function __construct($bridgeHost, $secret) {
     $this->secret   = $secret;
     $this->socketIO = new ElephantIO\Socket($bridgeHost, true, ElephantIO\Socket::DEBUG_HTML);
+    $this->socketIO->open();
   }
 
   /**
    * Destructor
    */
   public function __destruct() {
+  	@$this->socketIO->close();
   	unset($this->socketIO);
   	$this->secret = null;
   }
@@ -63,7 +65,7 @@ class nRelay {
    */
   private function send($code, nRelayData $msg) {
   	try {
-  		$this->socketIO->open()->emit($code, $msg)->close();
+  		$this->socketIO->emit($code, $msg);
   		return true;
   	}
   	catch(\Exception $e) {
