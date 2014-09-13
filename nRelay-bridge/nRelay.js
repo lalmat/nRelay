@@ -56,6 +56,8 @@ io.on('connection', function (socket) {
     if (debug) console.log("[nRelay] Socket disconnected");
     if (socket.isUser) {
       if (debug) console.log("[nRelay] Socket of user "+socket.uid+" removed from "+socket.room);
+      // Allow quick reconnect
+      userAry[socket.userHash] = {uid:socket.uid, allowed:true, room:socket.room, expire:(getTimestamp()+15)};
       roomCount[socket.room]--;
     }
   });
@@ -76,6 +78,7 @@ io.on('connection', function (socket) {
       socket.uid    = userAry[data.userHash].uid;
       socket.room   = userAry[data.userHash].room;
       socket.isUser = true;
+      socket.userHash  = data.userHash;
       socket.join(socket.room);
       roomCount[socket.room] = (roomCount[socket.room] > 0) ? roomCount[userAry[data.userHash].room]++ : 1;
       userAry[data.userHash].allowed = false; // Prevent multiple connexions.
