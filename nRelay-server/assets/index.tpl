@@ -39,7 +39,7 @@
 		 	}
 
 		  // This line ignite the realtime communication.
-		 	//var nRelayDemo = new nRelay("{$NLRY_HOST}","{$USER_HASH}").start(myPush, mySync);
+		 	var nRelayDemo = new nRelay("{$NLRY_HOST}","{$USER_HASH}").start(myPush, mySync);
 		 	
 		</script>
 	</head>
