@@ -27,4 +27,4 @@ $ node nRelay.js
 Get a client
 ============
 
-You can now use a client library to connect to the nRelay server like nRelay-client-php.
+You can now use a client library to connect to the nRelay server like nRelay-client-php : https://github.com/lalmat/nRelay-client-php
