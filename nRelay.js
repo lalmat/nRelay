@@ -1,4 +1,4 @@
-  /**
+/**
  * nRelay BRIDGE - Run on nodeJS
  */
 
@@ -14,7 +14,7 @@ var roomCount = new Array();    // Array of rooms with number of user connected 
 var gcTimeout = 5;              // Garbage Collector Interval (in sec.)
 var cxTimeout = 30;             // Max duration allowed to connect (in sec.)
 
-var HTTPS = new Array(); 
+var HTTPS = new Array();
 HTTPS['enabled'] = false;             // Activation du HTTPS
 HTTPS['prvKey'] = "ssl/node.key";    // Clé privée
 HTTPS['pubKey'] = "ssl/node.crt";    // Clé publique
@@ -22,7 +22,7 @@ HTTPS['optCA']  = false; //"ssl/node-ca.crt"; // Clé publique Autorité de Cert
 
 //-----------------------------------------------------------------------------
 // Serveur nRelay
-var jsSHA  = require("jssha"); 
+var jsSHA  = require("jssha");
 var app = null;
 var io = null;
 
@@ -42,8 +42,7 @@ if (HTTPS['enabled']) {
   app = require("https").createServer(ssl);
   io  = require("socket.io")(app);
   app.listen(port);
-} 
-
+}
 else {
   if (debug) console.log("[nRelay] SSL Mode OFF");
   io  = require('socket.io').listen(port);
@@ -56,6 +55,7 @@ io.on('connection', function (socket) {
     if (debug) console.log("[nRelay] Socket disconnected");
     if (socket.isUser) {
       if (debug) console.log("[nRelay] Socket of user "+socket.uid+" removed from "+socket.room);
+      io.sockets.in(socket.room).emit("sync", {uid:socket.uid, action:'DISCONNECTED', data:null});
       // Allow quick reconnect
       userAry[socket.userHash] = {uid:socket.uid, allowed:true, room:socket.room, expire:(getTimestamp()+15)};
       roomCount[socket.room]--;
